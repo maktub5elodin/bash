@@ -1,15 +1,29 @@
 #!/bin/bash
-# Modo gato: desactiva teclado y touchpad internos
+# 😺 Modo Gato – desactiva touchpad y captura teclado interno en Wayland
 
-TOUCHPAD_ID=$(xinput list | grep -i 'touchpad' | awk '{print $6}' | sed 's/id=//')
-KEYBOARD_ID=$(xinput list | grep -i 'AT Translated Set 2 keyboard' | awk '{print $6}' | sed 's/id=//')
+TOUCHPAD_KEY="org.gnome.desktop.peripherals.touchpad"
+KEYBOARD_DEV="/dev/input/event3"   # Tu teclado interno
 
-if [[ $1 == "on" ]]; then
-  xinput disable "$TOUCHPAD_ID"
-  xinput disable "$KEYBOARD_ID"
-  echo "😺 Modo gato activado"
-else
-  xinput enable "$TOUCHPAD_ID"
-  xinput enable "$KEYBOARD_ID"
-  echo "🐾 Modo gato desactivado"
-fi
+case "$1" in
+  on)
+    echo "Desactivando touchpad..."
+    gsettings set "$TOUCHPAD_KEY" send-events 'disabled'
+
+    echo "Capturando teclado interno en $KEYBOARD_DEV"
+    echo "😺 Modo gato ACTIVADO."
+    echo "   Mientras esta terminal esté abierta y evtest corra,"
+    echo "   el teclado interno no va a escribir nada."
+    echo "   Cuando el michi se baje, presioná Ctrl+C para salir."
+    sudo evtest --grab "$KEYBOARD_DEV"
+    ;;
+
+  off)
+    echo "Reactivando touchpad..."
+    gsettings set "$TOUCHPAD_KEY" send-events 'enabled'
+    echo "🐾 Modo gato DESACTIVADO."
+    ;;
+
+  *)
+    echo "Uso: $0 on | off"
+    ;;
+esac
